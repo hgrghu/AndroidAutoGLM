@@ -69,4 +69,4 @@ If you like this project, please give it a **Star** 🌟!
 
 **🦄 TikTok: Xi De Hu AI Programming**
 
-![Xi De Hu AI Programming](app/src/main/assets/sidhu.png)
+<img src="app/src/main/assets/sidhu.png" width="200" alt="Xi De Hu AI Programming">

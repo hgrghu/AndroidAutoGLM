@@ -75,6 +75,6 @@
 
 **🦄 抖音搜索：喜德胡AI编程**
 
-![喜德胡AI编程](app/src/main/assets/sidhu.png)
+<img src="app/src/main/assets/sidhu.png" width="200" alt="喜德胡AI编程">
 
 (快去下载体验一下，把你的手机变成智能助理吧！🦾)
