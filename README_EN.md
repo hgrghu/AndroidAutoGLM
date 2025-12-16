@@ -12,7 +12,7 @@ This is a **Standalone Android Version** of AutoGLM. No PC required, no ADB setu
 *   🔌 **Unstable Connection**: ADB cables or wireless debugging often disconnect.
 *   🐢 **High Latency**: Screen capture -> PC -> Model -> ADB Command loop is slow.
 
-### ✅ This Native Android Version:
+### ✅ My Native Android Version:
 *   📱 **Fully Independent**: **Just install the APK!** The phone is the brain. Run it anywhere. 🏃‍♂️
 *   ⚡️ **Zero Configuration**: No environment setup. No code. Works out of the box! 🎉
 *   🖐️ **Native Control**: Uses Android Accessibility Service for smooth clicks and swipes.
