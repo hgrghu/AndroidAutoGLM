@@ -1,79 +1,69 @@
-# AutoGLM Android Assistant User Guide
+# ✨ AutoGLM Android Assistant | Your Autonomous Phone Agent 🤖
 
-This is a native Android version of AutoGLM based on AutoGLM modifications. It requires no other software installation, works out of the box, and supports voice command input.
+This is a **Standalone Android Version** of AutoGLM. No PC required, no ADB setup, no complex environment. Just install the APK and run! 🚀
+
+---
+
+## 🌟 Why Choose This Version? (vs Original AutoGLM)
+
+### ❌ Original AutoGLM:
+*   💻 **Requires PC**: Must be connected to a computer to run.
+*   🐍 **Complex Setup**: Needs Python, ADB, and dependency management.
+*   🔌 **Unstable Connection**: ADB cables or wireless debugging often disconnect.
+*   🐢 **High Latency**: Screen capture -> PC -> Model -> ADB Command loop is slow.
+
+### ✅ This Native Android Version:
+*   📱 **Fully Independent**: **Just install the APK!** The phone is the brain. Run it anywhere. 🏃‍♂️
+*   ⚡️ **Zero Configuration**: No environment setup. No code. Works out of the box! 🎉
+*   🖐️ **Native Control**: Uses Android Accessibility Service for smooth clicks and swipes.
+*   🗣️ **Voice Interaction**: Built-in voice recognition. Just speak your commands! 🎙️
+*   👀 **Real-time Feedback**: **Floating Window** shows exactly what the AI is thinking and doing.
+
+---
 
 ## Language
 - [中文 (Chinese)](README.md)
 - [English](README_EN.md)
 
-Welcome to **AutoGLM Android Assistant**! This is an intelligent agent application based on a multimodal large model that helps you automate various tasks on your phone.
+---
 
 ## 1. Quick Start
 
 ### Step 1: Grant Necessary Permissions
-When opening the app for the first time, the system will prompt you to grant the following two key permissions, which are essential for the app to function correctly:
-*   **Accessibility Service Permission**: Used to allow the AI to simulate clicks, swipes, and read screen content.
-*   **Overlay Permission**: Used to display the AI's running status and control panel over other apps.
+When opening the app for the first time, grant these two key permissions:
+*   **Accessibility Service**: Allows AI to click, swipe, and read screen content. 👆
+*   **Overlay Permission**: Displays the AI status floating window over other apps. 💬
 
-Please click the prompt buttons inside the app (e.g., "Go to Enable", "Go to Grant") to jump to the system settings and turn on the corresponding switches.
-
-### Step 2: Get and Configure API Key
-This app is based on the Zhipu AI large model capabilities and requires an API Key to use.
-
-1.  **Get API Key**:
-    *   Visit [Zhipu AI Open Platform - API Key Management](https://bigmodel.cn/usercenter/proj-mgmt/apikeys).
-    *   Log in to your account (supports mobile number or WeChat scan).
-    *   Click "Create API Key" on the page or copy an existing Key.
-
-2.  **Enter App Settings**:
-    *   Return to the AutoGLM App.
-    *   Click the **Settings** icon in the upper right corner.
-    *   Click **"Enter API Key"** or **"Edit API Key"**.
-    *   Paste the copied API Key into the input box and save.
+### Step 2: Configure API Key
+This app uses Zhipu AI's vision model. You need an API Key:
+1.  Get a key from [Zhipu AI Open Platform](https://bigmodel.cn/usercenter/proj-mgmt/apikeys).
+2.  Go to App **Settings** -> **Enter API Key** -> Paste and Save. ✅
 
 ### Step 3: Start Using
-1.  Enter your instruction in the dialog box on the home page, for example: "Help me check tomorrow's weather", "Open TikTok, search for Xi De Hu AI Programming, and follow".
-2.  Click the **Send** button.
-3.  The app will automatically jump to the desktop or the corresponding app and display the current execution status via a **Floating Window**.
+*   **Text Command**: Type "Open YouTube and search for funny cats" 🔍
+*   **Voice Command**: Hold the mic button, speak, and release!
+*   Click **Send**, then **hands off the screen** and watch it work! 😎
 
 ---
 
-## 2. Floating Window Status Description
+## 2. Floating Window Status
 
-During task execution, a floating window will appear in the lower right corner of the screen to display the AI's current status.
-
-### Status Details
-
-**1. AutoGLM Ready (Green)**
-*   **Meaning**: Indicates currently idle, waiting for instructions.
-*   **Action**: Click the **"Return to App"** button to go back to the main interface to enter new instructions.
-
-**2. AutoGLM Running (Gray)**
-*   **Meaning**: Indicates the AI is thinking or executing actions (e.g., "Thinking...", "Clicking Screen").
-*   **Action**: **Do not manually operate the screen** to avoid interfering with the AI. If you need to forcibly interrupt, you can click the **"Stop"** button on the floating window.
-
-**3. AutoGLM Error (Red)**
-*   **Meaning**: Indicates a problem occurred during task execution (e.g., timeout, element not recognized).
-*   **Action**: You can click **"Stop"** or **"Return to App"** to view specific error messages.
-
-### Common Status Text
-*   **Thinking...**: The model is planning the next step.
-*   **Clicking Screen / Swiping Screen**: Executing specific touch operations.
-*   **Waiting**: Waiting for the page to load.
-*   **Stopped**: The task was manually canceled by the user or ended naturally.
+*   🟢 **Green (Ready)**: Idle and waiting for commands.
+*   ⚪ **Gray (Running)**: Thinking or executing actions. **Do not touch the screen!** 🤫
+*   🔴 **Red (Error)**: Something went wrong. Click "Stop" to reset.
 
 ---
 
 ## 3. FAQ
-*   **Why no action is performed?** Please check if the Accessibility Service has been turned off by the system (some phones may mistakenly close it when clearing background apps).
-*   **API Key Invalid?** Please confirm if there are extra spaces in the Key, or if the account balance is sufficient.
-
-Enjoy using it!
+*   **No action performed?** Check if Accessibility Service was killed by the system. Re-enable it.
+*   **API Key Invalid?** Check for extra spaces or account balance.
 
 ---
 
-## Follow Me
+## ❤️ Follow Me
 
-If you like my work, you can follow me on TikTok:
+If you like this project, please give it a **Star** 🌟!
 
-![Xi De Hu AI Programming](file:///android_asset/sidhu.png)
+**🦄 TikTok: Xi De Hu AI Programming**
+
+![Xi De Hu AI Programming](app/src/main/assets/sidhu.png)
