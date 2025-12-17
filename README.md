@@ -18,7 +18,7 @@
 
 > 观看 AutoGLM 的实际运行效果，体验真正的手机自动驾驶！
 
-<img src="./eg.gif" width="100%" alt="AutoGLM 演示" />
+<img src="./eg.gif" width="300" alt="AutoGLM 演示" />
 
 ---
 
