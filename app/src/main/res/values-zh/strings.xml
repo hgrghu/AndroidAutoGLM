@@ -119,4 +119,7 @@
     <string name="check_update_error">检查失败: %1$s</string>
     <string name="version_title">当前版本</string>
     <string name="new_version_badge">新版本</string>
+    
+    <!-- Execution Progress -->
+    <string name="execution_log_title">执行日志</string>
 </resources>

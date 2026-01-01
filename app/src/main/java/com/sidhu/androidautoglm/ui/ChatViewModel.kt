@@ -36,6 +36,7 @@ import android.content.ComponentName
 import android.text.TextUtils
 
 import com.sidhu.androidautoglm.BuildConfig
+import com.sidhu.androidautoglm.utils.PerformanceMonitor
 
 data class ChatUiState(
     val messages: List<UiMessage> = emptyList(),
@@ -48,7 +49,16 @@ data class ChatUiState(
     val apiKey: String = "",
     val baseUrl: String = "https://open.bigmodel.cn/api/paas/v4", // Official ZhipuAI Endpoint
     val isGemini: Boolean = false,
-    val modelName: String = "autoglm-phone"
+    val modelName: String = "autoglm-phone",
+    
+    // Progress tracking fields
+    val executionProgress: Float = 0f,  // 0-1
+    val currentPhase: String = "",      // "截图" "分析" "执行"等
+    val currentAction: String = "",     // 当前执行的动作
+    val executionLog: List<String> = emptyList(),  // 操作日志
+    val currentStep: Int = 0,
+    val totalSteps: Int = 0,
+    val metrics: PerformanceMonitor.TaskMetrics? = null
 )
 
 data class UiMessage(
@@ -213,6 +223,35 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
     }
+    
+    private fun updateProgress(phase: String, progress: Float, action: String = "", step: Int = 0, totalSteps: Int = 0) {
+        val timestamp = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+        val logEntry = if (action.isNotEmpty()) {
+            "[$timestamp] $phase: $action"
+        } else {
+            "[$timestamp] $phase"
+        }
+        
+        _uiState.value = _uiState.value.copy(
+            currentPhase = phase,
+            executionProgress = progress.coerceIn(0f, 1f),
+            currentAction = action,
+            currentStep = step,
+            totalSteps = totalSteps,
+            executionLog = (_uiState.value.executionLog + logEntry).takeLast(20) // Keep last 20 entries
+        )
+    }
+    
+    private fun clearProgress() {
+        _uiState.value = _uiState.value.copy(
+            executionProgress = 0f,
+            currentPhase = "",
+            currentAction = "",
+            currentStep = 0,
+            totalSteps = 0,
+            executionLog = emptyList()
+        )
+    }
 
     fun stopTask() {
         // Cancel the current task job - this will propagate cancellation to all coroutines
@@ -221,6 +260,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
         // Update UI state - explicitly clear error to avoid showing cancellation as error
         _uiState.value = _uiState.value.copy(isRunning = false, isLoading = false, error = null)
+        clearProgress()
         val service = AutoGLMService.getInstance()
         service?.setTaskRunning(false)
         service?.updateFloatingStatus(getApplication<Application>().getString(R.string.status_stopped))
@@ -294,6 +334,13 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch(Dispatchers.IO + currentTaskJob!!) {
             Log.d("AutoGLM_Debug", "Coroutine started")
+            
+            // Initialize performance monitoring
+            val taskId = "task_${System.currentTimeMillis()}"
+            PerformanceMonitor.startTask(taskId)
+            withContext(Dispatchers.Main) {
+                updateProgress("初始化", 0f, "准备开始任务", 0, 20)
+            }
 
             // Refresh app mapping before each request
             AppMapper.refreshInstalledApps()
@@ -364,6 +411,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 while (isActive && step < maxSteps) {
                     step++
                     Log.d("AutoGLM_Debug", "Step: $step")
+                    
+                    val stepProgress = (step.toFloat() / maxSteps.toFloat()) * 0.9f // Reserve 10% for completion
+                    withContext(Dispatchers.Main) {
+                        updateProgress("步骤 $step/$maxSteps", stepProgress, "准备截图", step, maxSteps)
+                    }
 
                     if (!DEBUG_MODE && service != null) {
                         service.updateFloatingStatus(getApplication<Application>().getString(R.string.status_thinking))
@@ -371,6 +423,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
                     // 1. Take Screenshot
                     Log.d("AutoGLM_Debug", "Taking screenshot...")
+                    val screenshotStartTime = System.currentTimeMillis()
+                    withContext(Dispatchers.Main) {
+                        updateProgress("截图", stepProgress + 0.01f, "正在截取屏幕", step, maxSteps)
+                    }
+                    
                     val screenshot = if (DEBUG_MODE) {
                         Bitmap.createBitmap(1080, 2400, Bitmap.Config.ARGB_8888)
                     } else {
@@ -380,8 +437,14 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     if (screenshot == null) {
                         Log.e("AutoGLM_Debug", "Screenshot failed")
                         postError(getApplication<Application>().getString(R.string.error_screenshot_failed))
+                        PerformanceMonitor.endTask(taskId)
                         break
                     }
+                    
+                    val screenshotDuration = System.currentTimeMillis() - screenshotStartTime
+                    val screenshotSize = screenshot.width * screenshot.height * 4 // ARGB_8888 = 4 bytes per pixel
+                    PerformanceMonitor.recordScreenshot(taskId, screenshotSize, screenshotDuration)
+                    
                     Log.d("AutoGLM_Debug", "Screenshot taken: ${screenshot.width}x${screenshot.height}")
 
                     // Use service dimensions for consistency with coordinate system
@@ -411,17 +474,31 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
                     // 3. Call API
                     Log.d("AutoGLM_Debug", "Sending request to ModelClient...")
+                    withContext(Dispatchers.Main) {
+                        updateProgress("分析", stepProgress + 0.02f, "正在调用AI模型分析屏幕", step, maxSteps)
+                    }
+                    
+                    val apiStartTime = System.currentTimeMillis()
                     val responseText = modelClient?.sendRequest(apiHistory, screenshot) ?: "Error: Client null"
+                    val apiDuration = System.currentTimeMillis() - apiStartTime
+                    val responseSize = responseText.length * 2 // Approximate size in bytes (UTF-16)
+                    PerformanceMonitor.recordApiCall(taskId, apiDuration, responseSize)
+                    
                     Log.d("AutoGLM_Debug", "Response received: ${responseText.take(100)}...")
 
                     if (responseText.startsWith("Error")) {
                         Log.e("AutoGLM_Debug", "API Error: $responseText")
                         postError(responseText)
+                        PerformanceMonitor.endTask(taskId)
                         break
                     }
 
                     // Parse response parts
                     val (thinking, actionStr) = ActionParser.parseResponseParts(responseText)
+                    
+                    withContext(Dispatchers.Main) {
+                        updateProgress("解析", stepProgress + 0.03f, "AI思考: ${thinking.take(50)}...", step, maxSteps)
+                    }
 
                     Log.i("AutoGLM_Log", "\n==================================================")
                     Log.i("AutoGLM_Log", "💭 思考过程:")
@@ -446,26 +523,45 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
                     // 4. Parse Action
                     val action = ActionParser.parse(responseText, screenWidth, screenHeight)
+                    val actionDescription = getActionDescription(action)
                     
                     // Update Floating Window Status with friendly description
-                    service?.updateFloatingStatus(getActionDescription(action))
+                    service?.updateFloatingStatus(actionDescription)
+                    
+                    withContext(Dispatchers.Main) {
+                        updateProgress("执行", stepProgress + 0.04f, actionDescription, step, maxSteps)
+                    }
                     
                     // 5. Execute Action
                     val executor = actionExecutor
                     if (executor == null) {
                          postError(getApplication<Application>().getString(R.string.error_executor_null))
+                         PerformanceMonitor.endTask(taskId)
                          break
                     }
 
                     // ensureActive() will throw CancellationException if job was cancelled
                     ensureActive()
 
+                    val actionStartTime = System.currentTimeMillis()
                     val success = executor.execute(action)
+                    val actionDuration = System.currentTimeMillis() - actionStartTime
+                    PerformanceMonitor.recordAction(taskId, action::class.simpleName ?: "Unknown", actionDuration)
 
                     if (action is Action.Finish) {
                         isFinished = true
+                        withContext(Dispatchers.Main) {
+                            updateProgress("完成", 1.0f, "任务已完成", step, maxSteps)
+                        }
                         _uiState.value = _uiState.value.copy(isRunning = false, isLoading = false)
                         service?.updateFloatingStatus(getApplication<Application>().getString(R.string.action_finish))
+                        
+                        // End performance monitoring and log report
+                        val finalMetrics = PerformanceMonitor.endTask(taskId)
+                        finalMetrics?.let {
+                            Log.i("PerformanceMonitor", PerformanceMonitor.generateReport(taskId))
+                            _uiState.value = _uiState.value.copy(metrics = it)
+                        }
                         break
                     }
 
@@ -482,16 +578,20 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 // Task was cancelled by user - this is expected behavior
                 // DO NOT show as error - clear any error state
                 Log.d("ChatViewModel", "Task was cancelled by user")
+                PerformanceMonitor.endTask(taskId)
                 _uiState.value = _uiState.value.copy(
                     isRunning = false,
                     isLoading = false,
                     error = null  // Explicitly clear any error
                 )
+                clearProgress()
                 service?.updateFloatingStatus(getApplication<Application>().getString(R.string.status_stopped))
             } catch (e: Exception) {
                 e.printStackTrace()
                 Log.e("AutoGLM_Debug", "Exception in sendMessage loop: ${e.message}", e)
+                PerformanceMonitor.endTask(taskId)
                 postError(getApplication<Application>().getString(R.string.error_runtime_exception, e.message))
+                clearProgress()
             } finally {
                 withContext(Dispatchers.Main) {
                     val service = AutoGLMService.getInstance()
@@ -499,6 +599,14 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     
                     if (!isFinished && !isActive && _uiState.value.error == null) {
                          _uiState.value = _uiState.value.copy(isRunning = false, isLoading = false)
+                    }
+                    
+                    // Log final performance metrics if not already done
+                    PerformanceMonitor.getMetrics(taskId)?.let { metrics ->
+                        if (metrics.endTime == null) {
+                            PerformanceMonitor.endTask(taskId)
+                            Log.i("PerformanceMonitor", PerformanceMonitor.generateReport(taskId))
+                        }
                     }
                 }
             }

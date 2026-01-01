@@ -67,6 +67,9 @@ import androidx.compose.ui.semantics.semantics
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import com.sidhu.androidautoglm.ui.components.TaskProgressIndicator
+import com.sidhu.androidautoglm.ui.components.ExecutionLogItem
+import androidx.compose.ui.text.font.FontWeight
 
 
 fun Context.findActivity(): ComponentActivity? = when (this) {
@@ -279,9 +282,51 @@ fun ChatScreen(
                     items(uiState.messages) { message ->
                         MessageItem(message)
                     }
+                    
+                    // Show progress indicator when task is running
+                    if (uiState.isRunning && uiState.currentPhase.isNotEmpty()) {
+                        item {
+                            TaskProgressIndicator(
+                                progress = uiState.executionProgress,
+                                currentPhase = uiState.currentPhase,
+                                currentAction = uiState.currentAction
+                            )
+                        }
+                    }
+                    
+                    // Show execution log
+                    if (uiState.executionLog.isNotEmpty()) {
+                        item {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color(0xFFFAFAFA)
+                                ),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(12.dp)
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.execution_log_title),
+                                        style = MaterialTheme.typography.titleSmall.copy(
+                                            fontWeight = FontWeight.Bold
+                                        ),
+                                        color = Color.Black
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    uiState.executionLog.takeLast(5).forEach { logEntry ->
+                                        ExecutionLogItem(logEntry = logEntry)
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
-                if (uiState.isLoading) {
+                if (uiState.isLoading && !uiState.isRunning) {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
             }

@@ -123,4 +123,7 @@
     <string name="battery_optimization_desc_on">Ignored (Service stays alive in background)</string>
     <string name="battery_optimization_desc_off">Enabled (System may kill service)</string>
     <string name="battery_optimization_allow">Allow Background Run</string>
+    
+    <!-- Execution Progress -->
+    <string name="execution_log_title">Execution Log</string>
 </resources>
