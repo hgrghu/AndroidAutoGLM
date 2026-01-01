@@ -69,6 +69,10 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import com.sidhu.androidautoglm.ui.components.TaskProgressIndicator
 import com.sidhu.androidautoglm.ui.components.ExecutionLogItem
+import com.sidhu.androidautoglm.ui.components.PerformanceSummaryCard
+import com.sidhu.androidautoglm.ui.components.CollapsibleExecutionLog
+import com.sidhu.androidautoglm.ui.components.LiveExecutionIndicator
+import com.sidhu.androidautoglm.ui.components.MemoryWarningBanner
 import androidx.compose.ui.text.font.FontWeight
 
 
@@ -283,6 +287,16 @@ fun ChatScreen(
                         MessageItem(message)
                     }
                     
+                    // Show live execution indicator when task is running
+                    if (uiState.isRunning && uiState.currentPhase.isNotEmpty()) {
+                        item {
+                            LiveExecutionIndicator(
+                                currentPhase = uiState.currentPhase,
+                                currentAction = uiState.currentAction
+                            )
+                        }
+                    }
+                    
                     // Show progress indicator when task is running
                     if (uiState.isRunning && uiState.currentPhase.isNotEmpty()) {
                         item {
@@ -294,33 +308,49 @@ fun ChatScreen(
                         }
                     }
                     
-                    // Show execution log
+                    // Show memory warning if needed
+                    uiState.metrics?.let { metrics ->
+                        if (metrics.endTime == null) { // Task is running
+                            val currentMemoryMB = if (metrics.memorySnapshots.isNotEmpty()) {
+                                metrics.memorySnapshots.last() / 1024.0f / 1024.0f
+                            } else 0f
+                            
+                            if (currentMemoryMB > 300) {
+                                item {
+                                    MemoryWarningBanner(currentMemoryMB = currentMemoryMB)
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Show collapsible execution log
                     if (uiState.executionLog.isNotEmpty()) {
                         item {
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 8.dp),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = Color(0xFFFAFAFA)
-                                ),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(12.dp)
-                                ) {
-                                    Text(
-                                        text = stringResource(R.string.execution_log_title),
-                                        style = MaterialTheme.typography.titleSmall.copy(
-                                            fontWeight = FontWeight.Bold
-                                        ),
-                                        color = Color.Black
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    uiState.executionLog.takeLast(5).forEach { logEntry ->
-                                        ExecutionLogItem(logEntry = logEntry)
+                            CollapsibleExecutionLog(
+                                logs = uiState.executionLog,
+                                defaultExpanded = uiState.isRunning,
+                                maxVisibleItems = 5
+                            )
+                        }
+                    }
+                    
+                    // Show performance summary after task completion
+                    uiState.metrics?.let { metrics ->
+                        if (metrics.endTime != null) {
+                            item {
+                                val clipboardManager = LocalClipboardManager.current
+                                PerformanceSummaryCard(
+                                    metrics = metrics,
+                                    onExport = {
+                                        val jsonReport = com.sidhu.androidautoglm.utils.PerformanceMonitor.generateJsonReport(metrics.taskId)
+                                        clipboardManager.setText(AnnotatedString(jsonReport))
+                                        Toast.makeText(
+                                            context,
+                                            context.getString(R.string.metrics_exported),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
                                     }
-                                }
+                                )
                             }
                         }
                     }

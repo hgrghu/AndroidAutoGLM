@@ -122,4 +122,24 @@
     
     <!-- Execution Progress -->
     <string name="execution_log_title">执行日志</string>
+    <string name="performance_summary_title">任务完成</string>
+    <string name="export_metrics">导出指标</string>
+    <string name="collapse">收起</string>
+    <string name="expand">展开</string>
+    <string name="expand_all">显示全部</string>
+    <string name="log_show_more">还有 %1$d 条</string>
+    
+    <!-- Performance Metrics -->
+    <string name="metric_duration">总耗时</string>
+    <string name="metric_screenshots">截图次数</string>
+    <string name="metric_api_calls">API调用</string>
+    <string name="metric_actions">执行动作</string>
+    <string name="metric_memory_peak">峰值内存</string>
+    <string name="metric_data_usage">数据用量</string>
+    
+    <!-- Memory Warnings -->
+    <string name="memory_warning_high">内存占用过高！</string>
+    <string name="memory_warning_moderate">内存占用警告</string>
+    <string name="metrics_exported">性能指标已导出</string>
+    <string name="metrics_export_failed">导出指标失败</string>
 </resources>

@@ -126,4 +126,24 @@
     
     <!-- Execution Progress -->
     <string name="execution_log_title">Execution Log</string>
+    <string name="performance_summary_title">Task Completed</string>
+    <string name="export_metrics">Export Metrics</string>
+    <string name="collapse">Collapse</string>
+    <string name="expand">Expand</string>
+    <string name="expand_all">Show All</string>
+    <string name="log_show_more">+ %1$d more entries</string>
+    
+    <!-- Performance Metrics -->
+    <string name="metric_duration">Total Duration</string>
+    <string name="metric_screenshots">Screenshots</string>
+    <string name="metric_api_calls">API Calls</string>
+    <string name="metric_actions">Actions Executed</string>
+    <string name="metric_memory_peak">Peak Memory</string>
+    <string name="metric_data_usage">Data Used</string>
+    
+    <!-- Memory Warnings -->
+    <string name="memory_warning_high">High Memory Usage!</string>
+    <string name="memory_warning_moderate">Memory Usage Warning</string>
+    <string name="metrics_exported">Performance metrics exported</string>
+    <string name="metrics_export_failed">Failed to export metrics</string>
 </resources>

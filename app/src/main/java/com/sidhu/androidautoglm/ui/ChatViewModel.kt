@@ -340,6 +340,10 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             PerformanceMonitor.startTask(taskId)
             withContext(Dispatchers.Main) {
                 updateProgress("初始化", 0f, "准备开始任务", 0, 20)
+                // Update UI with initial metrics
+                _uiState.value = _uiState.value.copy(
+                    metrics = PerformanceMonitor.getMetrics(taskId)
+                )
             }
 
             // Refresh app mapping before each request
@@ -445,6 +449,13 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     val screenshotSize = screenshot.width * screenshot.height * 4 // ARGB_8888 = 4 bytes per pixel
                     PerformanceMonitor.recordScreenshot(taskId, screenshotSize, screenshotDuration)
                     
+                    // Update UI with latest metrics
+                    withContext(Dispatchers.Main) {
+                        _uiState.value = _uiState.value.copy(
+                            metrics = PerformanceMonitor.getMetrics(taskId)
+                        )
+                    }
+                    
                     Log.d("AutoGLM_Debug", "Screenshot taken: ${screenshot.width}x${screenshot.height}")
 
                     // Use service dimensions for consistency with coordinate system
@@ -483,6 +494,13 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     val apiDuration = System.currentTimeMillis() - apiStartTime
                     val responseSize = responseText.length * 2 // Approximate size in bytes (UTF-16)
                     PerformanceMonitor.recordApiCall(taskId, apiDuration, responseSize)
+                    
+                    // Update UI with latest metrics
+                    withContext(Dispatchers.Main) {
+                        _uiState.value = _uiState.value.copy(
+                            metrics = PerformanceMonitor.getMetrics(taskId)
+                        )
+                    }
                     
                     Log.d("AutoGLM_Debug", "Response received: ${responseText.take(100)}...")
 
@@ -547,6 +565,13 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     val success = executor.execute(action)
                     val actionDuration = System.currentTimeMillis() - actionStartTime
                     PerformanceMonitor.recordAction(taskId, action::class.simpleName ?: "Unknown", actionDuration)
+                    
+                    // Update UI with latest metrics after action
+                    withContext(Dispatchers.Main) {
+                        _uiState.value = _uiState.value.copy(
+                            metrics = PerformanceMonitor.getMetrics(taskId)
+                        )
+                    }
 
                     if (action is Action.Finish) {
                         isFinished = true

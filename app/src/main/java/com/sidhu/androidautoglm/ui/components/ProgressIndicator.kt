@@ -10,6 +10,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 
 @Composable
 fun TaskProgressIndicator(
@@ -20,8 +24,24 @@ fun TaskProgressIndicator(
 ) {
     val animatedProgress by animateFloatAsState(
         targetValue = progress.coerceIn(0f, 1f),
-        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
         label = "progress"
+    )
+    
+    // Color animation based on progress
+    val progressColor = when {
+        animatedProgress < 0.3f -> Color(0xFF2196F3) // Blue for early stages
+        animatedProgress < 0.7f -> Color(0xFF9C27B0) // Purple for middle stages
+        else -> Color(0xFF4CAF50) // Green for completion
+    }
+    
+    val animatedColor by animateColorAsState(
+        targetValue = progressColor,
+        animationSpec = tween(durationMillis = 500),
+        label = "color"
     )
     
     Card(
@@ -29,26 +49,40 @@ fun TaskProgressIndicator(
             .fillMaxWidth()
             .padding(vertical = 8.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFF5F5F5)
+            containerColor = Color.White
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp)
+                .padding(16.dp)
         ) {
-            // Progress Bar
-            LinearProgressIndicator(
-                progress = animatedProgress,
+            // Custom gradient progress bar
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(6.dp),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = Color.LightGray
-            )
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(Color(0xFFE0E0E0))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(animatedProgress)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(
+                                    animatedColor.copy(alpha = 0.8f),
+                                    animatedColor
+                                )
+                            )
+                        )
+                )
+            }
             
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             
             // Progress Text and Percentage
             Row(
@@ -58,29 +92,38 @@ fun TaskProgressIndicator(
             ) {
                 Text(
                     text = currentPhase,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.SemiBold
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = FontWeight.Bold
                     ),
                     color = Color.Black
                 )
                 Text(
                     text = "${(animatedProgress * 100).toInt()}%",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 16.sp
                     ),
-                    color = MaterialTheme.colorScheme.primary
+                    color = animatedColor
                 )
             }
             
             // Current Action
             if (currentAction.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = currentAction,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    PulsingDot(
+                        modifier = Modifier.size(6.dp),
+                        color = animatedColor
+                    )
+                    Text(
+                        text = currentAction,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray
+                    )
+                }
             }
         }
     }
