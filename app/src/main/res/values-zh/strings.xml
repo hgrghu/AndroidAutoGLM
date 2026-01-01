@@ -142,4 +142,16 @@
     <string name="memory_warning_moderate">内存占用警告</string>
     <string name="metrics_exported">性能指标已导出</string>
     <string name="metrics_export_failed">导出指标失败</string>
+    
+    <!-- Error Details -->
+    <string name="error_occurred">发生错误</string>
+    <string name="show_more">显示更多</string>
+    <string name="show_less">收起</string>
+    <string name="possible_solutions">可能的解决方案：</string>
+    <string name="copy_error">复制错误</string>
+    <string name="retry">重试</string>
+    
+    <!-- Performance Recommendations -->
+    <string name="performance_recommendations">性能优化建议</string>
+    <string name="optimization_applied">已应用优化</string>
 </resources>

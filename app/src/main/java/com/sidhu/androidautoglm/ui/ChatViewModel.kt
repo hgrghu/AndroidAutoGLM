@@ -37,6 +37,7 @@ import android.text.TextUtils
 
 import com.sidhu.androidautoglm.BuildConfig
 import com.sidhu.androidautoglm.utils.PerformanceMonitor
+import com.sidhu.androidautoglm.utils.ImageOptimizer
 
 data class ChatUiState(
     val messages: List<UiMessage> = emptyList(),
@@ -445,9 +446,18 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                         break
                     }
                     
+                    // Optimize screenshot based on current memory
+                    val currentMetrics = PerformanceMonitor.getMetrics(taskId)
+                    val currentMemoryMB = if (currentMetrics?.memorySnapshots?.isNotEmpty() == true) {
+                        currentMetrics.memorySnapshots.last() / 1024.0f / 1024.0f
+                    } else 0f
+                    
+                    val optimizationQuality = ImageOptimizer.getAdaptiveQuality(currentMemoryMB)
+                    val optimizationResult = ImageOptimizer.optimizeScreenshot(screenshot, optimizationQuality)
+                    val optimizedScreenshot = optimizationResult.optimizedBitmap
+                    
                     val screenshotDuration = System.currentTimeMillis() - screenshotStartTime
-                    val screenshotSize = screenshot.width * screenshot.height * 4 // ARGB_8888 = 4 bytes per pixel
-                    PerformanceMonitor.recordScreenshot(taskId, screenshotSize, screenshotDuration)
+                    PerformanceMonitor.recordScreenshot(taskId, optimizationResult.optimizedSize.toInt(), screenshotDuration)
                     
                     // Update UI with latest metrics
                     withContext(Dispatchers.Main) {
@@ -456,7 +466,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                         )
                     }
                     
-                    Log.d("AutoGLM_Debug", "Screenshot taken: ${screenshot.width}x${screenshot.height}")
+                    Log.d("AutoGLM_Debug", "Screenshot taken and optimized: ${optimizedScreenshot.width}x${optimizedScreenshot.height}")
+                    Log.i("AutoGLM_Optimization", ImageOptimizer.getCompressionStats(
+                        optimizationResult.originalSize, 
+                        optimizationResult.optimizedSize
+                    ))
 
                     // Use service dimensions for consistency with coordinate system
                     val screenWidth = if (DEBUG_MODE) 1080 else service?.getScreenWidth() ?: 1080
@@ -477,7 +491,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
                     val userContentItems = mutableListOf<ContentItem>()
                     // Doubao/OpenAI vision models often prefer Image first, then Text
-                    userContentItems.add(ContentItem("image_url", imageUrl = ImageUrl("data:image/png;base64,${ModelClient.bitmapToBase64(screenshot)}")))
+                    // Use optimized screenshot for API call to reduce bandwidth
+                    userContentItems.add(ContentItem("image_url", imageUrl = ImageUrl("data:image/png;base64,${ModelClient.bitmapToBase64(optimizedScreenshot)}")))
                     userContentItems.add(ContentItem("text", text = textPrompt))
 
                     val userMessage = Message("user", userContentItems)
@@ -490,7 +505,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     }
                     
                     val apiStartTime = System.currentTimeMillis()
-                    val responseText = modelClient?.sendRequest(apiHistory, screenshot) ?: "Error: Client null"
+                    val responseText = modelClient?.sendRequest(apiHistory, optimizedScreenshot) ?: "Error: Client null"
                     val apiDuration = System.currentTimeMillis() - apiStartTime
                     val responseSize = responseText.length * 2 // Approximate size in bytes (UTF-16)
                     PerformanceMonitor.recordApiCall(taskId, apiDuration, responseSize)

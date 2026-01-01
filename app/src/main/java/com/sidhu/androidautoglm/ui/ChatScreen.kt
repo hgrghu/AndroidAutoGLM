@@ -73,6 +73,8 @@ import com.sidhu.androidautoglm.ui.components.PerformanceSummaryCard
 import com.sidhu.androidautoglm.ui.components.CollapsibleExecutionLog
 import com.sidhu.androidautoglm.ui.components.LiveExecutionIndicator
 import com.sidhu.androidautoglm.ui.components.MemoryWarningBanner
+import com.sidhu.androidautoglm.ui.components.ErrorDetailCard
+import com.sidhu.androidautoglm.ui.components.PerformanceRecommendationCard
 import androidx.compose.ui.text.font.FontWeight
 
 
@@ -352,6 +354,22 @@ fun ChatScreen(
                                     }
                                 )
                             }
+                            
+                            // Show performance recommendations
+                            item {
+                                PerformanceRecommendationCard(metrics = metrics)
+                            }
+                        }
+                    }
+                    
+                    // Show error detail card if there's an error
+                    uiState.error?.let { error ->
+                        item {
+                            ErrorDetailCard(
+                                error = error,
+                                onDismiss = { viewModel.clearError() },
+                                onRetry = null // Can add retry logic if needed
+                            )
                         }
                     }
                 }
