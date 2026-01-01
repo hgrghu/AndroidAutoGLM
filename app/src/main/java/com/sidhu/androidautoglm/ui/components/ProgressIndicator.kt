@@ -1,6 +1,7 @@
 package com.sidhu.androidautoglm.ui.components
 
 import androidx.compose.animation.core.*
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
