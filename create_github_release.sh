@@ -53,17 +53,22 @@ if [ ! -f "$RELEASE_NOTES" ]; then
 fi
 
 echo -e "${YELLOW}Checking existing releases...${NC}"
-EXISTING_RELEASE=$(curl -s -H "Authorization: token $TOKEN" \
+EXISTING_RELEASE=$(curl -s -H "Authorization: Bearer $TOKEN" \
     "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/releases/tags/$TAG_NAME" \
     | jq -r '.id // empty')
 
 if [ -n "$EXISTING_RELEASE" ]; then
     echo -e "${YELLOW}Release $TAG_NAME already exists (ID: $EXISTING_RELEASE)${NC}"
     echo "Do you want to delete it and create a new one? (y/N)"
-    read -r response
+    # Non-interactive mode for automation
+    if [[ "${NON_INTERACTIVE:-}" == "true" ]]; then
+        response="y"
+    else
+        read -r response
+    fi
     if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
         echo -e "${YELLOW}Deleting existing release...${NC}"
-        curl -X DELETE -H "Authorization: token $TOKEN" \
+        curl -X DELETE -H "Authorization: Bearer $TOKEN" \
             "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/releases/$EXISTING_RELEASE"
         echo -e "${GREEN}Existing release deleted${NC}"
     else
@@ -74,13 +79,13 @@ fi
 
 echo -e "${YELLOW}Creating git tag...${NC}"
 git tag -f "$TAG_NAME"
-git push -f origin "$TAG_NAME"
-echo -e "${GREEN}Tag created and pushed${NC}"
+# Attempt to push tag, but don't fail if it doesn't work (might not have push access but have release access)
+git push -f origin "$TAG_NAME" || echo "Warning: Could not push tag to origin"
 
 echo -e "${YELLOW}Creating GitHub release...${NC}"
 RELEASE_BODY=$(cat "$RELEASE_NOTES" | jq -Rs .)
 RELEASE_RESPONSE=$(curl -X POST \
-    -H "Authorization: token $TOKEN" \
+    -H "Authorization: Bearer $TOKEN" \
     -H "Content-Type: application/json" \
     "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/releases" \
     -d "{
@@ -107,7 +112,7 @@ APK_SIZE_MB=$((APK_SIZE / 1024 / 1024))
 echo "APK size: ${APK_SIZE_MB} MB"
 
 UPLOAD_RESPONSE=$(curl -X POST \
-    -H "Authorization: token $TOKEN" \
+    -H "Authorization: Bearer $TOKEN" \
     -H "Content-Type: application/vnd.android.package-archive" \
     --data-binary @"$APK_PATH" \
     "https://uploads.github.com/repos/$REPO_OWNER/$REPO_NAME/releases/$RELEASE_ID/assets?name=app-release.apk")

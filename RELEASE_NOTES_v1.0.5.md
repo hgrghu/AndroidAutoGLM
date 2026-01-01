@@ -139,9 +139,9 @@
 
 ## 🔗 相关链接
 
-- **GitHub仓库**: https://github.com/[your-repo]/AndroidAutoGLM
-- **问题反馈**: https://github.com/[your-repo]/AndroidAutoGLM/issues
-- **文档**: 应用内设置页面可访问完整文档
+- **GitHub仓库**: https://github.com/hgrghu/AndroidAutoGLM
+- **问题反馈**: https://github.com/hgrghu/AndroidAutoGLM/issues
+- **下载链接**: https://github.com/hgrghu/AndroidAutoGLM/releases/download/v1.0.5/app-release.apk
 
 ## 📄 许可证
 
