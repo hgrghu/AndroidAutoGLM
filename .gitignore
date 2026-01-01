@@ -18,6 +18,10 @@ build
 app/build
 app/release/
 *.apk
+!app/build/outputs/apk/release/app-release.apk
 androidRelease
 # Ignore downloaded model file
 app/src/main/assets/sherpa-model/model.onnx
+# Ignore keystore files
+*.jks
+*.keystore
