@@ -67,6 +67,15 @@ import androidx.compose.ui.semantics.semantics
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import com.sidhu.androidautoglm.ui.components.TaskProgressIndicator
+import com.sidhu.androidautoglm.ui.components.ExecutionLogItem
+import com.sidhu.androidautoglm.ui.components.PerformanceSummaryCard
+import com.sidhu.androidautoglm.ui.components.CollapsibleExecutionLog
+import com.sidhu.androidautoglm.ui.components.LiveExecutionIndicator
+import com.sidhu.androidautoglm.ui.components.MemoryWarningBanner
+import com.sidhu.androidautoglm.ui.components.ErrorDetailCard
+import com.sidhu.androidautoglm.ui.components.PerformanceRecommendationCard
+import androidx.compose.ui.text.font.FontWeight
 
 
 fun Context.findActivity(): ComponentActivity? = when (this) {
@@ -279,9 +288,93 @@ fun ChatScreen(
                     items(uiState.messages) { message ->
                         MessageItem(message)
                     }
+                    
+                    // Show live execution indicator when task is running
+                    if (uiState.isRunning && uiState.currentPhase.isNotEmpty()) {
+                        item {
+                            LiveExecutionIndicator(
+                                currentPhase = uiState.currentPhase,
+                                currentAction = uiState.currentAction
+                            )
+                        }
+                    }
+                    
+                    // Show progress indicator when task is running
+                    if (uiState.isRunning && uiState.currentPhase.isNotEmpty()) {
+                        item {
+                            TaskProgressIndicator(
+                                progress = uiState.executionProgress,
+                                currentPhase = uiState.currentPhase,
+                                currentAction = uiState.currentAction
+                            )
+                        }
+                    }
+                    
+                    // Show memory warning if needed
+                    uiState.metrics?.let { metrics ->
+                        if (metrics.endTime == null) { // Task is running
+                            val currentMemoryMB = if (metrics.memorySnapshots.isNotEmpty()) {
+                                metrics.memorySnapshots.last() / 1024.0f / 1024.0f
+                            } else 0f
+                            
+                            if (currentMemoryMB > 300) {
+                                item {
+                                    MemoryWarningBanner(currentMemoryMB = currentMemoryMB)
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Show collapsible execution log
+                    if (uiState.executionLog.isNotEmpty()) {
+                        item {
+                            CollapsibleExecutionLog(
+                                logs = uiState.executionLog,
+                                defaultExpanded = uiState.isRunning,
+                                maxVisibleItems = 5
+                            )
+                        }
+                    }
+                    
+                    // Show performance summary after task completion
+                    uiState.metrics?.let { metrics ->
+                        if (metrics.endTime != null) {
+                            item {
+                                val clipboardManager = LocalClipboardManager.current
+                                PerformanceSummaryCard(
+                                    metrics = metrics,
+                                    onExport = {
+                                        val jsonReport = com.sidhu.androidautoglm.utils.PerformanceMonitor.generateJsonReport(metrics.taskId)
+                                        clipboardManager.setText(AnnotatedString(jsonReport))
+                                        Toast.makeText(
+                                            context,
+                                            context.getString(R.string.metrics_exported),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                )
+                            }
+                            
+                            // Show performance recommendations
+                            item {
+                                PerformanceRecommendationCard(metrics = metrics)
+                            }
+                        }
+                    }
+                    
+                    // Show error detail card if there's an error
+                    uiState.error?.let { error ->
+                        item {
+                            ErrorDetailCard(
+                                error = error,
+                                onDismiss = { viewModel.clearError() },
+                                onRetry = null // Can add retry logic if needed
+                            )
+                        }
+                    }
                 }
 
-                if (uiState.isLoading) {
+                if (uiState.isLoading && !uiState.isRunning) {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
             }

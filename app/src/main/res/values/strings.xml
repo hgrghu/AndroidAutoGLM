@@ -123,4 +123,39 @@
     <string name="battery_optimization_desc_on">Ignored (Service stays alive in background)</string>
     <string name="battery_optimization_desc_off">Enabled (System may kill service)</string>
     <string name="battery_optimization_allow">Allow Background Run</string>
+    
+    <!-- Execution Progress -->
+    <string name="execution_log_title">Execution Log</string>
+    <string name="performance_summary_title">Task Completed</string>
+    <string name="export_metrics">Export Metrics</string>
+    <string name="collapse">Collapse</string>
+    <string name="expand">Expand</string>
+    <string name="expand_all">Show All</string>
+    <string name="log_show_more">+ %1$d more entries</string>
+    
+    <!-- Performance Metrics -->
+    <string name="metric_duration">Total Duration</string>
+    <string name="metric_screenshots">Screenshots</string>
+    <string name="metric_api_calls">API Calls</string>
+    <string name="metric_actions">Actions Executed</string>
+    <string name="metric_memory_peak">Peak Memory</string>
+    <string name="metric_data_usage">Data Used</string>
+    
+    <!-- Memory Warnings -->
+    <string name="memory_warning_high">High Memory Usage!</string>
+    <string name="memory_warning_moderate">Memory Usage Warning</string>
+    <string name="metrics_exported">Performance metrics exported</string>
+    <string name="metrics_export_failed">Failed to export metrics</string>
+    
+    <!-- Error Details -->
+    <string name="error_occurred">Error Occurred</string>
+    <string name="show_more">Show More</string>
+    <string name="show_less">Show Less</string>
+    <string name="possible_solutions">Possible Solutions:</string>
+    <string name="copy_error">Copy Error</string>
+    <string name="retry">Retry</string>
+    
+    <!-- Performance Recommendations -->
+    <string name="performance_recommendations">Performance Recommendations</string>
+    <string name="optimization_applied">Optimization Applied</string>
 </resources>
